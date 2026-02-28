@@ -1,5 +1,5 @@
 {
-  "name": "docker-test-multi-container-prod",
+  "name": "docker-test-multi-container-dev",
   "private": true,
   "version": "0.0.0",
   "type": "module",
