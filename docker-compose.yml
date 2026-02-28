@@ -1,0 +1,39 @@
+#Compose format version
+version: "3.8"
+
+#services: means the containers that I want to build. In this case frontend and backend containers
+services:
+  
+  backend:
+    build: ./backend #this means go inside backend folder where Dockerfile is located and build the image
+    ports:          #Port forwarding
+      - "5000:5000"  #LOCAL_PC_PORT(ANY)->BACKEND_CONTAINER_PORT(backend EXPOSE port as written in Dockerfile)
+    env_file:
+      - ./backend/.env #Access to backend .env file when necessary during docker container run time
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80" #LOCAL_PC_PORT(ANY)->FRONTEND_CONTAINER_PORT(frontend EXPOSE ngnix port by -default  80)
+    depends_on:
+      - backend #Tells docker to Start backend service container first, THEN start frontend
+  
+
+## VERY IMPORTANT NOTE (not for our current project)
+## There are TWO different cases for fetching from the backend:
+##
+## CASE 1 - Server-side / container-to-container communication:
+##   Use the Docker service name as the hostname (Docker Compose gives service-name = DNS name)
+##   Example: fetch("http://backend:5000/")  ✅ works inside a container
+##            fetch("http://localhost:5000/") ❌ breaks inside a container ("localhost" = the container itself)
+##
+## CASE 2 - Browser-side (React, Vanilla JS, etc.):
+##   The fetch runs on the USER'S MACHINE, not inside any container.
+##   So "backend" is NOT resolvable — the browser has no idea what that hostname is.
+##   Use localhost + the mapped port from docker-compose ports instead.
+##   Example: fetch("http://localhost:5000/")  ✅ works in the browser
+##            fetch("http://backend:5000/")    ❌ ERR_NAME_NOT_RESOLVED in the browser
+##
+## RULE OF THUMB:
+##   Backend/server code talking to another container → use service name (e.g. "backend")
+##   Frontend/browser code talking to a container    → use localhost + mapped port (e.g. "localhost:5000")
